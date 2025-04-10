@@ -10,7 +10,7 @@ https://github.com/Akira-13/PE-CC3S2
 
 Después de ejecutar los comandos para la creación del ambiente virtual de Python, tengo el siguiente `pip list`
 
-![link text](../resources/img/PE_project_creation.jpg)
+![Creación de ambiente virtual](../resources/img/PE_project_creation.jpg)
 
 ### Dockerfile y docker-compose.yml
 
@@ -84,7 +84,7 @@ Con estos archivos tengo listo el ambiente de desarrollo de la aplicación y pue
 
 Como se pide en las instrucciones, creé una rama `develop` y otra `feature/estructura-inicial` con todos los archivos creados. Usé un archivo `.gitignore` para evitar cargar el ambiente virtual al repositorio.
 
-![link text](../resources/img/PE_repo_creation.jpg)
+![Creación del repositorio](../resources/img/PE_repo_creation.jpg)
 
 ### Registro diario
 
@@ -92,8 +92,122 @@ No es necesario ejecutar `git diff` para el primer commit. Solo muestro el resul
 
 #### Blame en compose.yml
 
-![link text](../resources/img/PE_blame_1_2.jpg)
+![Blame en compose.yml](../resources/img/PE_blame_1_2.jpg)
 
 #### Blame en Dockerfile
 
-![link text](../resources/img/PE_blame_1_1.jpg)
+![Blame en Dockerfile](../resources/img/PE_blame_1_1.jpg)
+
+## Día 2 - Implementación de la clase Question y pruebas unitarias (Sprint 1 – Parte 2)
+
+### Clase Question
+
+Primero, implementé la clase `Question` con la documentación necesaria. Además, agregué un chequeo en el constructor de la clase para verificar que la respuesta correcta se encuentre en la lista de opciones. Caso contrario, se lanza un error.
+
+```python
+class Question:
+    """
+    Class that represents a question to be displayed in the game.
+
+    ...
+
+    Attributes
+    ----------
+    description : str
+        String representing the question content
+    options : list[str]
+        List of strings representing the answer choices for the question
+    correct_answer : str
+        Correct answer included in the options list
+
+    Methods
+    -------
+    is_correct(answer : str)
+        Compares the provided answer with the stored correct answer
+
+    """
+
+    def __init__(self, description, options, correct_answer):
+        """
+        Initializes a question with the given parameters.
+        Parameters
+        ----------
+        description : str
+            String representing the question content
+        options : list[str]
+            Array of strings representing the answer choices for the question
+        correct_answer : int
+            Correct answer included in the options list
+
+        Raises
+        -------
+        Value error
+            If the correct answer is not in option
+        """
+        self.description = description
+        self.options = options
+        self.correct_answer = correct_answer
+        if correct_answer not in options:
+            raise ValueError(
+                f"Correct answer {correct_answer} is not in the options list!"
+            )
+
+    def is_correct(self, answer):
+        """Compares the provided answer with the stored correct answer"""
+        return self.correct_answer == answer
+```
+
+### Pruebas unitarias para Question
+
+Documenté las pruebas unitarias provistas en las instrucciones y agregué una prueba que verifica que se lanza un error `ValueError` cuando la respuesta no se encuentra en las opciones de la pregunta.
+
+```python
+import pytest
+from trivia import Question
+
+
+def test_question_answer_not_in_options():
+    """
+    Test that Question raises ValueError if correct_answer is not in options
+    list
+    """
+    with pytest.raises(ValueError):
+        question = Question("What is 2 + 2?", ["1", "2", "3", "4"], "5")
+
+
+def test_question_correct_answer():
+    """
+    Test that is_correct() returns True when the given answers match.
+    """
+    question = Question("What is 2 + 2?", ["1", "2", "3", "4"], "4")
+    assert question.is_correct("4")
+
+
+def test_question_incorrect_answer():
+    """
+    Test that is_correct() returns False when the given answers don't match.
+    """
+    question = Question("What is 2 + 2?", ["1", "2", "3", "4"], "4")
+    assert not question.is_correct("2")
+```
+
+#### Ejecución de pruebas
+
+![Ejecución de pruebas de la clase Question](../resources/img/PE_question_tests.jpg)
+
+### Commit
+
+![Commit del segundo día](../resources/img/PE_commit_d2.jpg)
+
+
+### Registro diario
+
+No modifiqué ninguno de los archivos existentes, solo creé dos nuevos archivos. Por lo tanto, solo mostraré los resultados de `git blame`.
+
+#### Blame en trivia.py
+
+![Blame en trivia.py](../resources/img/PE_blame_2_1.jpg)
+
+#### Blame en test_trivia.py
+
+![Blame en test_trivia.py](../resources/img/PE_blame_2_2.jpg)
