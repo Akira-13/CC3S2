@@ -346,3 +346,125 @@ Se creó la rama "feature/estructura-basic" y se hizo commit con la nueva clase.
 #### Blame en trivia.py
 
 ![blame en el día 3](../resources/img/PE_blame_3_1.jpg)
+
+## Día 4 - Sistema de puntuación, manejo de rondas y finalización del juego (Sprint 2)
+
+### Implementación de atributos
+
+Se implementaron los atributos `correct_answers`, `incorrect_answers` y `rounds`. Los dos primeros llevan un conteo del número de preguntas respondidas correcta e incorrectamente. El último es un valor entero que limita el número de preguntas a mostrar en el juego. 
+
+### Implementación del método `anser_question`
+
+```python
+    def answer_question(self, question, answer):
+        """Check if answer is correct to question.
+
+        Compares the given answer to a question's correct option,
+        updates correct or incorrect answer counter, and returns
+        True or False.
+
+        Parameters
+        ----------
+        question: Question
+            A Question instance with a correct option.
+        answer: str
+            The answer to be compared to the correct option.
+
+        Returns
+        -------
+        True
+            If answer to question is correct.
+        False
+            If answer to question is incorrect.
+        """
+        if question.is_correct(answer):
+            self.correct_answers += 1
+            return True
+        else:
+            self.incorrect_answers += 1
+            return False
+```
+
+### Manejo de rondas
+
+Para el manejo de rondas, solo se agregó un bucle `for` a las preguntas mostradas, además de un mensaje final al terminar las rondas.
+
+```python
+        question = self.get_next_question()
+        for _ in range(self.rounds):
+            if question is None:
+                break
+            print(
+                (
+                    f"Pregunta {self.current_question_index + 1}: "
+                    "f{question.description}"
+                )
+            )
+
+.......
+
+        print("Juego terminado. Aquí esta tu puntuación:")
+        print(f"Preguntas contestadas: {self.rounds}")
+        print(f"Respuestas correctas: {self.correct_answers}")
+        print(f"Respuestas incorrectas: {self.incorrect_answers}")
+```
+
+### Pruebas unitarias
+
+Se implementaron pruebas unitarias para los contadores de puntuación, la función `get_next_question` y el caso límite en el que se quiera agregar alguna variable que no sea instance de Question a la lista de preguntas.
+
+```python
+def test_quiz_scoring():
+    """
+    Test that correct and incorrect questions are properly validated.
+    """
+    quiz = Quiz()
+    question = Question("What is 2 + 2?", ["1", "2", "3", "4"], "4")
+    quiz.add_question(question)
+    assert quiz.answer_question(question, "4") is True
+    assert quiz.correct_answers == 1
+    assert quiz.answer_question(question, "2") is False
+    assert quiz.incorrect_answers == 1
+
+
+def test_add_question_not_instace_of_Question():
+    """
+    Test that adding anything but an instance of Question raises TypeError.
+    """
+    quiz = Quiz()
+    question = "I raise an error in Quiz!"
+    with pytest.raises(TypeError):
+        quiz.add_question(question)
+
+
+def test_next_questions():
+    """
+    Test that getting the next question works up until no questions are left.
+    """
+    first_question = Question("What is 2 + 2?", ["1", "2", "3", "4"], "4")
+    second_question = Question("What is 4 * 0?", ["4", "1", "0", "-1"], "0")
+    quiz = Quiz()
+    quiz.add_question(first_question)
+    quiz.add_question(second_question)
+    assert quiz.get_next_question() is first_question
+    assert quiz.get_next_question() is second_question
+    assert quiz.get_next_question() is None
+```
+
+#### Ejecución de pruebas
+
+![Pruebas para Quiz](../resources/img/PE_test_4.jpg)
+
+### Commit
+
+Con la clase y pruebas hechas, hice commit en la rama feature/estructura-basic. Esto se puede ver al ejecutar `git-blame`.
+
+### Registro diario
+
+#### Blame en la clase Quiz
+
+![Blame que muestra implementación de método answer_question](../resources/img/PE_blame_4_3.jpg)
+
+![Blame que muestra documentación extendida de clase Quiz](../resources/img/PE_blame_4_2.jpg)
+
+![Blame que muestra implementación de lógica de rondas](../resources/img/PE_blame_4_1.jpg)
