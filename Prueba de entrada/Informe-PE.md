@@ -211,3 +211,138 @@ No modifiqué ninguno de los archivos existentes, solo creé dos nuevos archivos
 #### Blame en test_trivia.py
 
 ![Blame en test_trivia.py](../resources/img/PE_blame_2_2.jpg)
+
+## Día 3 - Implementación de la clase Quiz y flujo básico del juego (Sprint 1 – Parte 3)
+
+Primero, corregí algunos errores en los docstrings de la clase Question e implementé un docstring general para el módulo. Con este nuevo commit empecé a trabajar en la clase Quiz.
+
+### Clase Quiz
+
+Implementé la clase Quiz junto al método `run_quiz()` para mostrar las preguntas en consola.
+
+```python
+class Quiz:
+    """
+    Class that manages the game flow.
+
+    ...
+
+    Attributes
+    ----------
+    questions: list[Question]
+        List of Question instances to be displayed during the game.
+    current_question_index: int
+        The index of the current question shown in the game.
+
+    Methods
+    -------
+    add_question(question : Question)
+        Add a question to the Quiz question list.
+    get_next_question()
+        Return the question next to the current index.
+    run_quiz()
+        Show each question and expects player input.
+    """
+
+    def __init__(self):
+        """Initialize empty Quiz instance.
+
+        Parameters
+        ----------
+        questions: list[Question], default []
+            An empty list of questions.
+        current_question_index: int, default 0
+            The index of the current question displayed in the game.
+        """
+        self.questions = []
+        self.current_question_index = 0
+
+    def add_question(self, question):
+        """Add question to the end of the question list.
+
+        Parameters
+        ----------
+        question: Question
+            Question to be added at the end of the list.
+
+        Raises
+        ------
+        TypeError
+            If the question is not instance of Question class.
+        """
+        if not isinstance(question, Question):
+            raise TypeError("Question is not instance of Question class!")
+        self.questions.append(question)
+
+    def get_next_question(self):
+        """Get next question to the index if it exists.
+
+        Returns
+        -------
+        question
+            Next question in the list.
+        None
+            If method is called from last question in list.
+        """
+        if self.current_question_index < len(self.questions):
+            question = self.questions[self.current_question_index]
+            self.current_question_index += 1
+            return question
+        return None
+
+    def run_quiz(self):
+        """Run quiz game.
+
+        Show each question and its options properly formatted
+        and expects player input as their answer. If the answer
+        belongs to options, shows right or wrong message and
+        displays next question. Otherwise, shows the same question
+        again.
+        """
+        welcome = (
+            "Bienvenido al juego de trivia!\nResponde las siguientes "
+            "preguntas seleccionando el número de la opción correcta."
+        )
+        print(welcome)
+        question = self.questions[self.current_question_index]
+        while question is not None:
+            print(
+                (
+                    f"Pregunta {self.current_question_index + 1}: "
+                    "f{question.description}"
+                )
+            )
+
+            option_list = zip(question.options, range(len(question.options)))
+            for option, no in option_list:
+                print(f"{no+1}) {option}")
+            print("Tu respuesta: ")
+            answer_index = int(input())
+            if answer_index not in range(len(question.options)):
+                print("¡Respuesta inválida!")
+                continue
+
+            player_answer = question.options[answer_index]
+            if question.is_correct(player_answer):
+                print("¡Correcto!")
+            else:
+                print("¡Incorrecto!")
+
+            question = self.get_next_question()
+```
+
+### Nueva rama y commit
+
+Se creó la rama "feature/estructura-basic" y se hizo commit con la nueva clase.
+
+![Commit en el día 3](../resources/img/PE_commit_3.jpg)
+
+### Registro diario
+
+#### Diff en trivia.py
+
+![diff en el día 3](../resources/img/PE_diff_3_1.jpg)
+
+#### Blame en trivia.py
+
+![blame en el día 3](../resources/img/PE_blame_3_1.jpg)
