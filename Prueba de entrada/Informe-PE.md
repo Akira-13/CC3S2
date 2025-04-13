@@ -468,3 +468,99 @@ Con la clase y pruebas hechas, hice commit en la rama feature/estructura-basic. 
 ![Blame que muestra documentación extendida de clase Quiz](../resources/img/PE_blame_4_2.jpg)
 
 ![Blame que muestra implementación de lógica de rondas](../resources/img/PE_blame_4_1.jpg)
+
+## Día 5 - Mejoras en la interfaz de usuario y refinamientos (Sprint 3)
+
+### Mejorar la lógica en run_quiz()
+
+Mejoré la lógica en `run_quiz()` y agregué una función `load_questions()` para cargar preguntas por defecto en un archivo .json. También agregué la posibilidad de elegir la dificultad de estas preguntas.
+
+```python
+def run_quiz(self):
+
+...
+
+        # If no questions have been loaded, load default questions by
+        # asking player difficulty.
+        if not self.questions:
+            diff = ""
+            while True:
+                diff = input(
+                    "¿En qué dificultad le gustaría jugar?\n"
+                    "1) Fácil\n"
+                    "2) Difícil\n"
+                    "Escriba 1 o 2: "
+                ).lower()
+                if diff == "1" or diff == "2":
+                    break
+                print("¡Opción inválida!")
+            self.load_questions(difficulty=diff)
+```
+
+```python
+    def load_questions(self, path="DEFAULT", difficulty="1"):
+        """Load questions from file.
+
+        Loads the questions from a given file path in JSON format. If
+        only difficulty is given, it loads default questions from file.
+
+        Parameters
+        ----------
+        path: str, default "DEFAULT"
+            A file path with questions in JSON format.
+        difficulty: str, default "1"
+            Difficulty to distingish between easy and hard default questions.
+        """
+        if path == "DEFAULT" and difficulty == "1":
+            with open("./default_questions.json", "r") as file:
+                data = json.load(file)
+                for q in data.get("easy_questions", []):
+                    self.add_question(
+                        Question(q["description"], q["options"], q["correct_answer"])
+                    )
+        elif path == "DEFAULT" and difficulty == "2":
+            with open("./default_questions.json", "r") as file:
+                data = json.load(file)
+                for q in data.get("hard_questions", []):
+
+                    self.add_question(
+                        Question(q["description"], q["options"], q["correct_answer"])
+                    )
+        else:
+            with open(path, "r") as file:
+                data = json.load(file)
+                for q in data.get("questions", []):
+                    self.add_question(
+                        Question(q["description"], q["options"], q["correct_answer"])
+                    )
+```
+
+### Probando la interfaz de juego
+
+![Interfaz de juego en prueba 1](../resources/img/PE_game_flow_1.jpg)
+
+![Interfaz de juego en prueba 2](../resources/img/PE_game_flow_2.jpg)
+
+### Blame y Diff
+
+Después de hacer commit con estos cambios en la rama "feature/ui-improvements", puedo revisar qué cambios se tienen.
+
+#### Diff 
+
+![Diff en el día 5 - 1](../resources/img/PE_diff_5_1.jpg)
+
+![Diff en el día 5 - 2](../resources/img/PE_diff_5_2.jpg)
+
+#### Blame
+
+![Blame en el día 5 - 1](../resources/img/PE_blame_5_1.jpg)
+
+![Blame en el día 5 - 2](../resources/img/PE_blame_5_2.jpg)
+
+![Blame en el día 5 - 3](../resources/img/PE_blame_5_3.jpg)
+
+#### Fusionar en la rama develop
+
+Con el juego principal terminado, puedo fusionar en la rama principal `develop`.
+
+![Merge a la rama develop](../resources/img/PE_merge_5_1.jpg)
