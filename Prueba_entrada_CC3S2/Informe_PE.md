@@ -559,8 +559,385 @@ Después de hacer commit con estos cambios en la rama "feature/ui-improvements",
 
 ![Blame en el día 5 - 3](../resources/img/PE_blame_5_3.jpg)
 
-#### Fusionar en la rama develop
+### Fusionar en la rama develop
 
 Con el juego principal terminado, puedo fusionar en la rama principal `develop`.
 
 ![Merge a la rama develop](../resources/img/PE_merge_5_1.jpg)
+
+## Día 6 - Pipeline CI/CD y pruebas de integración
+
+### Creación de archivo para flujo CI
+
+```yaml
+name: Python CI
+
+on:
+  push:
+    branches: [develop, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: pytest
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=akira-13
+            -Dsonar.projectKey=Akira-13_PE-CC3S2
+            -Dsonar.sources=app/
+            -Dsonar.tests=tests/
+            -Dsonar.verbose=true
+      - name: Run Security Scan
+        run: bandit -c bandit.yaml -r .
+```
+
+En un inicio, la primera versión de este archivo me resultó en varios errores por una mala configuración de SonarQube y Bandit. Solo pude probarlo en la fusión con la rama principal, por lo que tuve que mejorarlo en el día final. Este código es la versión final del archivo con las claves para SonarQube Cloud apropiadamente configuradas desde sonarqube.io, al igual que el nombre de organización y clave del proyecto. Me guié de [la página oficial de la acción para SonarQube](https://github.com/SonarSource/sonarqube-scan-action).
+
+### Pruebas de integración
+
+Para las pruebas de integración se usa `pytest` para testear los endpoints expuestos con FastAPI. Primero, expuse los endpoints con FastAPI, usando algunas funciones de mi clase `trivia.py`.
+
+#### Archivo main.py con endpoints
+
+```python
+import json
+from contextlib import asynccontextmanager
+from typing import Dict, List, Optional
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import os
+from .trivia import Question, Quiz
+
+load_dotenv()
+
+app = FastAPI(title="Trivia Game API")
+
+# Global quiz instance
+quiz = Quiz()
+
+db_url = os.getenv("DB_URL")
+secret_key = os.getenv("SECRET_KEY")
+
+
+@app.get("/config-check")
+async def check_config():
+    return {
+        "db_url": db_url,
+        "db_connected": bool(db_url),
+    }
+
+
+class QuestionData(BaseModel):
+    description: str
+    options: list[str]
+    correct_answer: str
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load default questions when the app starts."""
+    quiz.load_questions(difficulty="1")
+    yield
+    quiz.load_questions(difficulty="1")
+
+
+@app.get("/")
+async def root():
+    """Test message."""
+    return {"message": "Welcome to the Trivia Game API"}
+
+
+@app.get("/questions/next")
+async def get_next_question():
+    """Get the next question in the quiz."""
+    question = quiz.get_next_question()
+    if not question:
+        raise HTTPException(status_code=404, detail="No more questions available")
+    return {
+        "question_no": quiz.current_question_index - 1,
+        "description": question.description,
+        "options": question.options,
+        "correct_answer": question.correct_answer,
+    }
+
+
+@app.post("/questions")
+async def create_question(question_data: QuestionData):
+    """Add question to question list."""
+    try:
+        q = Question(
+            description=question_data.description,  # Access as attributes
+            options=question_data.options,
+            correct_answer=question_data.correct_answer,
+        )
+        quiz.add_question(q)
+        return {"message": "Question added successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/questions/answer")
+async def answer_question(answer_data: dict):
+    """Submit an answer to the current question."""
+    if "answer" not in answer_data:
+        raise HTTPException(status_code=400, detail="Answer is required")
+
+    current_index = quiz.current_question_index - 1
+    if current_index not in range(len(quiz.questions)):
+        raise HTTPException(status_code=400, detail="No active question to answer")
+
+    question = quiz.questions[current_index]
+    is_correct = quiz.answer_question(question, answer_data["answer"])
+
+    return {
+        "is_correct": is_correct,
+        "correct_answer": question.correct_answer,
+        "score": {"correct": quiz.correct_answers, "incorrect": quiz.incorrect_answers},
+    }
+
+
+@app.get("/quiz/reset")
+async def reset_quiz(difficulty="1"):
+    """Reset the quiz with new questions."""
+    global quiz
+    quiz = Quiz()
+    quiz.load_questions(difficulty=difficulty)
+    return {"message": "Quiz reset successfully"}
+
+
+@app.get("/quiz/empty")
+async def empty_quiz():
+    """Empty the quiz with new questions."""
+    global quiz
+    quiz = Quiz()
+    return {"message": "Quiz emptied successfully"}
+
+
+@app.get("/quiz/stats")
+async def get_quiz_stats():
+    """Get current quiz statistics."""
+    return {
+        "total_questions": len(quiz.questions),
+        "current_question": quiz.current_question_index,
+        "correct_answers": quiz.correct_answers,
+        "incorrect_answers": quiz.incorrect_answers,
+    }
+```
+
+#### Pruebas de integración
+
+Las pruebas son almacenadas en tets/test_main.py
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+from app.trivia import Quiz
+
+client = TestClient(app)
+
+SAMPLE_QUESTIONS = [
+    {"description": "What is 2+2?", "options": ["3", "4", "5"], "correct_answer": "4"},
+    {
+        "description": "Capital of France?",
+        "options": ["London", "Paris", "Berlin"],
+        "correct_answer": "Paris",
+    },
+]
+
+
+# @pytest.fixture(autouse=True)
+# def reset_quiz_state():
+#     """Reset the quiz before each test"""
+#     quiz = Quiz()
+#     yield
+#     quiz = Quiz()  # Reset again after test
+
+
+def test_quiz_reset():
+    """Test quiz resets properly"""
+
+    response = client.get("/quiz/reset")
+    assert response.status_code == 200
+    response = client.get("/quiz/stats")
+    assert response.json()["total_questions"] == 10
+
+
+def test_empty_quiz():
+    """Test successfully creating a question"""
+
+    response = client.get("/quiz/empty")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Quiz emptied successfully"}
+
+
+def test_create_question_success():
+    """Test successfully creating a question"""
+
+    client.get("/quiz/empty")
+    response = client.post("/questions", json=SAMPLE_QUESTIONS[0])
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Question added successfully"}
+
+
+def test_cycle_questions():
+    """Test successfully creating a question"""
+
+    client.get("/quiz/empty")
+    client.post("/questions", json=SAMPLE_QUESTIONS[0])
+    client.post("/questions", json=SAMPLE_QUESTIONS[1])
+
+    response = client.get("questions/next")
+    assert response.status_code == 200
+    assert response.json()["description"] == SAMPLE_QUESTIONS[0]["description"]
+    response = client.get("questions/next")
+    assert response.status_code == 200
+    assert response.json()["description"] == SAMPLE_QUESTIONS[1]["description"]
+    response = client.get("questions/next")
+    assert response.status_code == 404
+
+
+def test_answer_questions():
+    """Test successfully creating a question"""
+
+    client.get("/quiz/empty")
+    client.post("/questions", json=SAMPLE_QUESTIONS[0])
+    client.post("/questions", json=SAMPLE_QUESTIONS[1])
+
+    client.get("questions/next")
+    response = client.post("/questions/answer", json={"answer": "4"})
+    assert response.status_code == 200
+    assert response.json()["is_correct"] is True
+    response = client.post("/questions/answer", json={"answer": "Berlin"})
+    assert response.status_code == 200
+    assert response.json()["is_correct"] is False
+    response = client.get("/quiz/stats")
+    assert response.json()["correct_answers"] == 1
+    assert response.json()["incorrect_answers"] == 1
+```
+
+El resultado de las pruebas se verá automáticamente en el flujo CI al hacer push en la rama principal.
+
+### Commits diarios
+
+#### Commit con los endpoints
+
+![Commit con los endpoints de FastAPI](../resources/img/PE_commit_6_1.jpg)
+
+#### Commit con la configuración CI
+
+![Commit con la configuración CI](../resources/img/PE_commit_6_2.jpg)
+
+## Día 7 - Gestión de configuración, seguridad y pruebas de rendimiento
+
+### Creación de dotenv y carga
+
+Creé un archivo `.env` con algunos datos sensibles, como la clave de sesión y URL de la base de datos.
+
+```lang
+DB_URL=postgresql://postgres:password@db:5432/postgres
+SECRET_KEY=8Ee6m####################################
+```
+
+Este archivo no será cargado al repositorio remoto y está incluido en `.gitignore`. La carga de este archivo se hace en `main.py` con las siguientes sentencias:
+
+```python
+load_dotenv()
+db_url = os.getenv("DB_URL")
+secret_key = os.getenv("SECRET_KEY")
+```
+
+### Pruebas de seguridad con bandit
+
+Bandit revisa automáticamente el código en el repositorio para encontrar fallas de seguridad comunes. Para evitar falsos positivos, incluí un archivo simple de configuración `bandit.yaml` para evitar que revise archivos de prueba.
+
+```yaml
+exclude_dirs: ['tests/', 'locustfile.py']
+```
+
+En el archivo para el flujo CI, bandit se llama de la siguiente forma:
+
+```yaml
+      - name: Run Security Scan
+        run: bandit -c bandit.yaml -r .
+```
+
+### Pruebas de carga con Locust
+
+Locust permite simular la interacción con los endpoints de un número grande de usuarios de forma similar a los archivos de prueba. Implementé el siguiente archivo de prueba de carga `locustfile.py`
+
+```python
+from locust import HttpUser, task, between
+import random
+
+
+class TriviaUser(HttpUser):
+    wait_time = between(2, 4)  # Random wait between requests
+
+    def on_start(self):
+        """Login/setup (runs once per virtual user)"""
+        self.client.get("/quiz/reset")
+
+    @task(3)  # Weighted probability
+    def play_trivia_round(self):
+        """Simulate a player answering questions"""
+        # 1. Get next question
+        question_resp = self.client.get("/questions/next")
+        if not question_resp.ok:
+            return
+
+        question = question_resp.json()
+
+        # 2. Submit random answer
+        options = question["options"]
+        answer = random.choice(options)
+        self.client.post("/questions/answer", json={"answer": answer})
+
+    @task(2)
+    def check_stats(self):
+        """Check game statistics"""
+        self.client.get("/quiz/stats")
+
+    @task(1)
+    def reset_game(self):
+        """Admin reset (10% of users)"""
+        if random.random() < 0.1:  # 10% chance
+            self.client.get("/quiz/reset")
+```
+
+Se espera que algunas respuestas retornen 404, ya que así está configurado cuando se llega al final de las preguntas y se intenta llamar a la siguiente. Después de simular un tráfico de 100 usuarios, partiendo desde 1 y de 5 en 5.
+
+![Resulados con Locust](../resources/img/PE_locust_6_1.jpg)
+
+### Commit final
+
+En este commit también incluí la primera etiqueta `v1.0`
+
+![Commit del día 7](../resources/img/PE_commit_7_1.jpg)
+
+### Commit de configuración de CI final
+
+Tras esto, para que el flujo CI funcione, realice unos cambios finales en el archivo CI.
+
+![Commit del día 7 de CI](../resources/img/PE_commit_7_2.jpg)
+
+### Commit de configuración de CI final
+
+Finalmente, el workflow da luz verde para comprobar que todas las pruebas han pasado satisfactoriamente.
+
+![Workflow final](../resources/img/PE_workflow_7_1.jpg)
