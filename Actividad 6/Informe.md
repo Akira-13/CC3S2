@@ -76,5 +76,6 @@ Después de la inicialización del segundo repositorio y creación de la rama `a
 Realizando un cherry pick en el commit `db5e7b7` a la rama principal, se tiene el siguiente gráfico:
 
 ![Gráfico del segundo repositorio tras cherry-pick](../resources/img/A6_P2_3.jpg)
+
 Este nuevo commit tiene un hash diferente al de &ldquo;Se agrega CONTRIBUTING.md&rdquo; de la rama `add-base-documents`.
 
