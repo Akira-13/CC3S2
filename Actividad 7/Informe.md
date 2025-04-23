@@ -191,3 +191,6 @@ Se agregó tres escenarios en Gherkin en inglés
     Entonces mi estómago no debería gruñir
 ```
 
+### Pruebas
+
+![](../resources/img/A7_8.jpg)
