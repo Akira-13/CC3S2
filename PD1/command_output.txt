@@ -1,0 +1,222 @@
+=========================================
+ Iniciando el ejercicio avanzado de Git
+=========================================
+-----------------------------------------
+[1] Inicializando repositorio...
+Inicializado repositorio Git vacío en /home/ak13a/Documentos/Cursos/DS/PD1/.git/
+Repositorio Git inicializado.
+-----------------------------------------
+-----------------------------------------
+[2] Clonando repositorio (si se proporciona URL)...
+Clonando en 'repo_clonado'...
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+Recibiendo objetos: 100% (3/3), listo.
+Repositorio clonado en el directorio 'repo_clonado'.
+-----------------------------------------
+-----------------------------------------
+[3] Configurando alias y opciones personalizadas de Git...
+Alias configurados: co, br, ci, st, last.
+-----------------------------------------
+-----------------------------------------
+[4] Creando archivo .gitignore...
+.gitignore creado con éxito.
+-----------------------------------------
+-----------------------------------------
+[5] Creando archivos de ejemplo y realizando commits...
+advertencia: agregando repositorio de git embebido: repo_clonado
+hint: You've added another git repository inside your current repository.
+hint: Clones of the outer repository will not contain the contents of
+hint: the embedded repository and will not know how to obtain it.
+hint: If you meant to add a submodule, use:
+hint:
+hint: 	git submodule add <url> repo_clonado
+hint:
+hint: If you added this path by mistake, you can remove it from the
+hint: index with:
+hint:
+hint: 	git rm --cached repo_clonado
+hint:
+hint: See "git help submodule" for more information.
+hint: Disable this message with "git config set advice.addEmbeddedRepo false"
+[main (commit-raíz) 344b31b] Commit inicial: agregar estructura de proyecto con implementación avanzada de Merkle Tree
+ 6 files changed, 582 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 docs/README.md
+ create mode 100755 git_workflow.sh
+ create mode 160000 repo_clonado
+ create mode 100644 src/main.py
+ create mode 100644 tests/test_main.py
+Archivos creados y commit realizado.
+-----------------------------------------
+-----------------------------------------
+[6] Simulando cambios, diff y uso de git stash...
+Modificando src/main.py para simular un cambio...
+Mostrando diferencias:
+Guardando cambios en stash...
+Directorio de trabajo y estado de índice On main: Cambio en main.py para pruebas de stash guardados
+Restaurando cambios desde stash...
+En la rama main
+Cambios no rastreados para el commit:
+  (usa "git add <archivo>..." para actualizar lo que será confirmado)
+  (usa "git restore <archivo>..." para descartar los cambios en el directorio de trabajo)
+	modificados:     src/main.py
+
+sin cambios agregados al commit (usa "git add" y/o "git commit -a")
+Descartado refs/stash@{0} (6e16c4dbc85d22837452c213306aa04379c465a7)
+-----------------------------------------
+-----------------------------------------
+[7] Inspeccionando el repositorio con git tag y git blame...
+Etiqueta 'v1.0' creada.
+Usando git blame en src/main.py:
+^344b31b (Akira             2025-04-22 11:33:40 -0500  1) #!/usr/bin/env python3
+^344b31b (Akira             2025-04-22 11:33:40 -0500  2) import hashlib
+^344b31b (Akira             2025-04-22 11:33:40 -0500  3) 
+^344b31b (Akira             2025-04-22 11:33:40 -0500  4) class MerkleTreeNode:
+^344b31b (Akira             2025-04-22 11:33:40 -0500  5)     """
+-----------------------------------------
+-----------------------------------------
+[8] Deshaciendo cambios utilizando reset, revert y rm...
+[main 6893baf] Commit temporal para probar revert
+ 1 file changed, 2 insertions(+)
+Commit temporal realizado: 6893baf5335dc2770c48345d8c87c1ecfb1272ed
+Revirtiendo el commit temporal con git revert...
+[main d3e9789] Revert "Commit temporal para probar revert"
+ Date: Tue Apr 22 11:33:59 2025 -0500
+ 1 file changed, 2 deletions(-)
+Eliminando archivo de prueba usando git rm...
+[main d112898] Agregar archivo temporal
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 temp.txt
+rm 'temp.txt'
+[main 015531f] Eliminar archivo temporal usando git rm
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ delete mode 100644 temp.txt
+Creando rama de prueba para demostrar git reset...
+Cambiado a nueva rama 'reset-demo'
+[reset-demo aa5c1ec] Commit en rama reset-demo
+ 1 file changed, 1 insertion(+)
+Realizando git reset --soft al commit anterior...
+-----------------------------------------
+-----------------------------------------
+[9] Reescribiendo el historial con rebase interactivo y mostrando reflog...
+Iniciando rebase interactivo (nota: se requiere edición manual)...
+(Simulación: se muestra la instrucción, pero no se ejecuta el editor)
+Para practicar: ejecute 'git rebase -i HEAD~3' manualmente.
+Mostrando el reflog para ver movimientos de HEAD:
+015531f HEAD@{0}: reset: moving to HEAD~1
+aa5c1ec HEAD@{1}: commit: Commit en rama reset-demo
+015531f HEAD@{2}: checkout: moving from main to reset-demo
+015531f HEAD@{3}: commit: Eliminar archivo temporal usando git rm
+d112898 HEAD@{4}: commit: Agregar archivo temporal
+d3e9789 HEAD@{5}: revert: Revert "Commit temporal para probar revert"
+6893baf HEAD@{6}: commit: Commit temporal para probar revert
+344b31b HEAD@{7}: reset: moving to HEAD
+344b31b HEAD@{8}: commit (initial): Commit inicial: agregar estructura de proyecto con implementación avanzada de Merkle Tree
+-----------------------------------------
+-----------------------------------------
+[10] Sincronizando con repositorio remoto...
+Remoto 'origin' agregado.
+Ejecutando git fetch y git pull (si existen cambios remotos)...
+fatal: repositorio 'https://example.com/usuario/ejemplo.git/' no encontrado
+No se pudo hacer pull de origin/master.
+-----------------------------------------
+-----------------------------------------
+[11] Simulando distintas variantes de git reset...
+Modificando docs/README.md para simular cambios...
+[reset-demo 953a0d3] Commit para reset demo
+ 1 file changed, 2 insertions(+)
+Ejecutando git reset --soft HEAD~1 (mantiene cambios en staging)...
+Restaurando estado...
+Ejecutando git reset --hard HEAD~0 (forzando estado limpio)...
+HEAD está ahora en 015531f Eliminar archivo temporal usando git rm
+-----------------------------------------
+-----------------------------------------
+[12] Estrategias avanzadas de branching y merging...
+Cambiado a nueva rama 'feature-1'
+[feature-1 a1f7ae3] Agregar feature-1
+ 1 file changed, 1 insertion(+)
+error: ruta especificada 'master' no concordó con ningún archivo conocido por git
+Cambiado a nueva rama 'feature-2'
+[feature-2 77b1cc7] Agregar feature-2
+ 1 file changed, 1 insertion(+)
+error: ruta especificada 'master' no concordó con ningún archivo conocido por git
+Realizando merge sin fast-forward de feature-1...
+Ya está actualizado.
+Cambiado a nueva rama 'hotfix-1'
+[hotfix-1 29ee7e9] Aplicar hotfix-1
+ 1 file changed, 1 insertion(+)
+error: ruta especificada 'master' no concordó con ningún archivo conocido por git
+Cambiado a nueva rama 'hotfix-2'
+[hotfix-2 eb9a95c] Aplicar hotfix-2
+ 1 file changed, 1 insertion(+)
+error: ruta especificada 'master' no concordó con ningún archivo conocido por git
+Realizando octopus merge de hotfix-1 y hotfix-2...
+Ya está actualizado.
+-----------------------------------------
+-----------------------------------------
+[13] Mostrando git log en formato gráfico avanzado...
+* eb9a95c (HEAD -> hotfix-2) Aplicar hotfix-2
+* 29ee7e9 (hotfix-1) Aplicar hotfix-1
+* 77b1cc7 (feature-2) Agregar feature-2
+* a1f7ae3 (feature-1) Agregar feature-1
+* 015531f (reset-demo, main) Eliminar archivo temporal usando git rm
+* d112898 Agregar archivo temporal
+* d3e9789 Revert "Commit temporal para probar revert"
+* 6893baf Commit temporal para probar revert
+* 344b31b (tag: v1.0) Commit inicial: agregar estructura de proyecto con implementación avanzada de Merkle Tree
+-----------------------------------------
+-----------------------------------------
+[14] Utilizando git blame en src/main.py...
+^344b31b (Akira 2025-04-22 11:33:40 -0500  1) #!/usr/bin/env python3
+^344b31b (Akira 2025-04-22 11:33:40 -0500  2) import hashlib
+^344b31b (Akira 2025-04-22 11:33:40 -0500  3) 
+^344b31b (Akira 2025-04-22 11:33:40 -0500  4) class MerkleTreeNode:
+^344b31b (Akira 2025-04-22 11:33:40 -0500  5)     """
+^344b31b (Akira 2025-04-22 11:33:40 -0500  6)     Representa un nodo en un árbol de Merkle.
+^344b31b (Akira 2025-04-22 11:33:40 -0500  7)     Cada nodo almacena un hash y, si no es hoja, referencia a sus nodos hijos.
+^344b31b (Akira 2025-04-22 11:33:40 -0500  8)     """
+^344b31b (Akira 2025-04-22 11:33:40 -0500  9)     def __init__(self, left=None, right=None, hash_value=None):
+^344b31b (Akira 2025-04-22 11:33:40 -0500 10)         self.left = left
+-----------------------------------------
+-----------------------------------------
+[15] Simulando uso de git bisect para encontrar errores...
+Se crea un cambio que introduce un bug en src/main.py...
+[hotfix-2 6d063fb] Introducir bug en main.py para bisect
+ 1 file changed, 1 insertion(+)
+Iniciando git bisect...
+Git bisect en progreso... (simulación, finalizar manualmente con 'git bisect reset')
+-----------------------------------------
+-----------------------------------------
+[16] Agregando submódulo al repositorio...
+El submódulo ya existe o la URL no es válida.
+-----------------------------------------
+-----------------------------------------
+[17] Configurando hooks de Git (pre-commit)...
+Hook pre-commit configurado en .git/hooks/pre-commit.
+-----------------------------------------
+-----------------------------------------
+[18] Simulando limpieza del historial con filter-branch/BFG...
+NOTA: Esta simulación muestra el comando y advertencias. No se ejecuta una limpieza real.
+Ejemplo de filter-branch:
+  git filter-branch --tree-filter 'rm -f secrets.txt' HEAD
+Si se utiliza BFG Repo-Cleaner, se ejecutaría desde JAVA:
+  java -jar bfg.jar --delete-files secrets.txt
+-----------------------------------------
+-----------------------------------------
+[19] Creando un Git Worktree...
+Cambiado a nueva rama 'worktree_branch'
+Preparando árbol de trabajo (haciendo checkout a 'worktree_branch')
+fatal: 'worktree_branch' is already used by worktree at '/home/ak13a/Documentos/Cursos/DS/PD1'
+Worktree creada en el directorio 'worktree_demo'.
+-----------------------------------------
+-----------------------------------------
+[20] Configuración personalizada y alias adicionales...
+Configuraciones personalizadas y alias 'hist' creados.
+-----------------------------------------
+=========================================
+Ejercicio de Git avanzado completado.
+Recuerde que algunos comandos requieren acciones manuales.
+Para finalizar cualquier operación interactiva, consulte la documentación de Git.
+	
