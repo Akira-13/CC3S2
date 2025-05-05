@@ -193,4 +193,142 @@ Se agregó tres escenarios en Gherkin en inglés
 
 ### Pruebas
 
-![](../resources/img/A7_8.jpg)
+    ![](../resources/img/A7_8.jpg)
+
+## Ejercicio 4: Manejo de tiempos aleatorios
+
+### steps.py
+Agregué una nueva función `@when` para leer enunciados del tipo "Cuando espero un tiempo aleatorio entre *inicio* y *fin*".
+```python
+@when("espero un tiempo aleatorio entre {start:d} y {end:d} horas")
+def step_when_wait_random_time_range(context, start, end):
+    if start > end:
+        raise ValueError(
+            f"El inicio del rango {start} no puede ser mayor al final {end}"
+        )
+    context.belly.esperar_aleatorio([start, end])
+```
+
+### belly.py
+Agregué una función para generar un tiempo de espera aleatorio dado un rango de horas y agregarlo al tiempo esperado.
+```python
+    def esperar_aleatorio(self, rango: List[float]):
+        if len(rango) != 2:
+            raise ValueError(
+                "Esperado una lista de longitud 2,"
+                f"se recibió lista de longitud {len(rango)}"
+            )
+        if rango[0] > rango[1]:
+            raise ValueError(
+                "Límite inferior de rango debe ser menor que límite superior"
+            )
+        tiempo = uniform(rango[0], rango[1])
+        print(tiempo)
+        self.tiempo_esperado += tiempo
+```
+Además, agregué *Typing* explícito para que el código sea más auto-documentable.
+
+### Escenario
+```gherkin
+  Escenario: Esperar un rango de tiempo
+    Dado que he comido 25 pepinos
+    Cuando espero un tiempo aleatorio entre 2 y 3 horas
+    Entonces mi estómago debería gruñir
+```
+
+### Pruebas
+![](../resources/img/A7_9.png)
+
+## Ejercicio 5: Validación de cantidades no válidas
+
+En este ejercicio me di cuenta que estaba escribiendo *pickles* como *pickels* y decidí continuar con esta nomenclatura mal escrita para mantener la consistencia.
+
+### belly.py
+
+La lógica para cantidad negativa ya la tenía implementada; solo tuve que implementar la lógica para cantidades mayor a 100.
+
+```python
+        if pepinos > 100:
+            raise ValueError(
+                f"Cantidad de pepinos {pepinos} no puede superar 100 unidades"
+            )
+```
+
+### belly.features
+
+Implementé los escenarios de prueba para cantidades negativas y cantidades mayores a 100. Estos verifican que se levanten errores en la lógica del código.
+
+```gherkin
+  Escenario: Manejar una cantidad negativa de pepinos
+    Dado que he comido -5 pepinos
+    Entonces debería ocurrir un error de cantidad negativa.
+
+  Escenario: Manejar una cantidad excesiva de pepinos
+    Dado que he comido 232 pepinos
+    Entonces debería ocurrir un error de cantidad de 100 unidades superada.
+```
+
+### steps.py
+
+Aquí implementé la lógica para detectar los errores levantados en la lógica.
+
+```python
+@given("que he comido {cukes} pepinos")
+def step_given_eaten_cukes(context, cukes):
+    try:
+        context.belly.comer(float(cukes))
+        context.error = None
+    except Exception as e:
+        context.error = e
+
+@then("debería ocurrir un error de {error}")
+def step_then_error_should_occur(context, error):
+    assert context.error is not None, "Se esperaba un error, pero no ocurrió ninguno."
+    assert isinstance(
+        context.error, ValueError
+    ), f"Se esperaba ValueError, pero ocurrió: {type(context.error).__name__}"
+
+    if "negativa" in error:
+        assert (
+            "negativa" in str(context.error).lower()
+        ), f"El mensaje de error no menciona 'negativa': {context.error}"
+
+    if "100" in error:
+        assert (
+            "100" in str(context.error).lower()
+        ), f"El mensaje de error no menciona '100': {context.error}"
+```
+
+### Pruebas
+
+![](../resources/img/A7_10.png)
+
+## Ejercicio 6: Escalabilidad con grandes cantidades de pepinos
+
+### steps.py
+
+Para esta situación, modifiqué directamente la cantidad de pepinillos consumidos sin llamar a `comer()`.
+
+```python
+@given("que he comido {cukes} pepinos sin validación")
+def step_give_eaten_cukes_no_validate(context, cukes):
+    context.belly.pepinos_comidos = float(cukes)
+```
+
+### belly.feature
+
+```gherkin
+  Escenario: Comer 1000 pepinos y esperar 10 horas
+    Dado que he comido 1000 pepinos sin validación
+    Cuando espero 10 horas
+    Entonces mi estómago debería gruñir
+```
+
+### Prueba
+La prueba es superada sin problema ni un aumento en el tiempo notable.
+
+![](../resources/img/A7_11.png)
+
+## Ejercicio 7: Descripciones de tiempo complejas
+
+
